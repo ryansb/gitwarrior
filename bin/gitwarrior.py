@@ -21,7 +21,6 @@
 
 import os
 import readline
-from gitwarrior import list_issues
 from optparse import OptionParser
 from ConfigParser import ConfigParser
 
@@ -49,9 +48,9 @@ if __name__ == "__main__":
 		#deal with list and all its shortcuts
 		print "HI LIST"
 		try:
-			list_issues(args[1])
+			gitwarrior.list_issues(args[1])
 		except IndexError:
-			list_issues(config.get('Projects', 'default'))
+			gitwarrior.list_issues(config.get('Projects', 'default'))
 
 	elif args[0] == 'la':
 		#deal with the shortcut of list that autolists all
