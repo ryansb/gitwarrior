@@ -20,6 +20,44 @@
 
 __version__ = "0.1"
 from github2.client import Github
+from operator import attrgetter
+
+
+HEADERS = {
+    'ID': {'get': attrgetter('number'), 'length':4},
+    'State': {'get': attrgetter('state'), 'length':7},
+    'Title': {'get': attrgetter('title'), 'length':32},
+    'Body': {'get': attrgetter('body'), 'length':32},
+    'User': {'get': attrgetter('user'), 'length':15},
+    'Votes': {'get': attrgetter('votes'), 'length':5},
+}
+
+def format_issue(issue, headers=('ID', 'State', 'Title')):
+	"""Description: Returns a string of formatted output
+
+	Can pass in either a list of Issue objects or a single Issue
+
+	headers is a tuple of the headers for the formatted output
+	They are printed in order, options are:
+		ID, State, Title, Body, User, Votes
+	"""
+	ret = ""
+	formatter_string = ''
+
+	if not isinstance(issue, list):
+		issue = [issue]
+
+	for h in headers:
+		formatter_string += "%%-%ds" % HEADERS[h]['length']
+
+	ret += formatter_string % headers
+	ret += '\n'
+	ret += "-" * len(formatter_string % headers)
+	ret += '\n'
+
+	for i in issue:
+		ret += formatter_string % tuple(HEADERS[h]['get'](i) for h in headers)
+	return ret
 
 class Hub(object):
 	def __init__(self, uname, token, default_project):
