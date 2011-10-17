@@ -66,14 +66,17 @@ if __name__ == "__main__":
 
 	hub = Hub(config)
 
-	if args[0] in SHORTCUTS['list']:
-		#deal with list and all its shortcuts
-		try:
-			print format_issue(hub.list_issues(args[1]), tuple(options.headers.split(',')))
-		except IndexError:
-			print format_issue(hub.list_issues(config.get('Defaults', 'project')), tuple(options.headers.split(',')))
+	#this try-except is to make sure that help is shown if now arguments are provided
+	try:
+		if args[0] in SHORTCUTS['list']:
+			#deal with list and all its shortcuts
+			try:
+				print format_issue(hub.list_issues(args[1]), tuple(options.headers.split(',')))
+			except IndexError:
+				print format_issue(hub.list_issues(config.get('Defaults', 'project')), tuple(options.headers.split(',')))
+	except IndexError: args.append('h')
 
-	elif args[0] == 'la':
+	if args[0] == 'la':
 		#deal with the shortcut of list that autolists all
 		print format_issue(hub.list_issues('all'), tuple(options.headers.split(',')))
 
