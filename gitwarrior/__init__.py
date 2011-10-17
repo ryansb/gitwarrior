@@ -22,10 +22,10 @@
 __version__ = "0.1"
 import os
 import tempfile
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import call
 from operator import attrgetter
 from github2.client import Github
+from ConfigParser import ConfigParser
 
 ISSUE_FILE_CONTENT = """[Issue]
 Title = {title}
@@ -64,7 +64,6 @@ def format_issue(issue, headers=('ID', 'State', 'Title', 'Body')):
 	ret += '\n'
 
 	for i in issue:
-		print HEADERS[h]['length']
 		ret_list = []
 		for h in headers:
 			t = unicode(HEADERS[h]['get'](i))
@@ -79,7 +78,7 @@ class Hub(object):
 		self.uname = config.get('Credentials', 'username')
 		self.token = config.get('Credentials', 'token')
 		self._connect()
-		self.def_proj = "%s/%s" % (self.uname, config.get('Projects', 'default'))
+		self.def_proj = "%s/%s" % (self.uname, config.get('Defaults', 'project'))
 		self.config = config
 
 	@property
@@ -130,16 +129,32 @@ class Hub(object):
 	def edit(self, id, opt=None):
 		issue = self.get_issue(id, opt)
 		(fh, name) = tempfile.mkstemp(prefix='gw-edit-', suffix='.txt', text=True)
-		print type(fh), fh
-		print type(name), name
 		f = open(name, 'w')
 		f.write(ISSUE_FILE_CONTENT.format(title=issue.title, body=issue.body))
 		f.close()
-		Popen(args=[self.get_editor(), name], shell=True, bufsize=-1, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+		call([self.get_editor(), name])
 		f = open(name, 'r')
-		edited_text = f.read()
+		alterations = ConfigParser()
+		alterations.readfp(f)
 		f.close()
-		print edited_text
+		#self.gh.issues.edit(id, opt, alterations.get('Issue', 'Title'), alterations.get('Issue', 'Body'))
+		return "Issue %s now has:\nTitle: %s\nBody: %s" % (id,
+				alterations.get('Issue', 'Title'), alterations.get('Issue',
+					'Body'))
 
 	def get_editor(self):
-		return (self.config.get('ui', 'editor') or os.environ.get('EDITOR') or 'vi')
+		return (self.config.get('Defaults', 'editor') or os.environ.get('EDITOR')
+				or 'vi')
+
+	def status(self, id, opt=None, action=None):
+		if not opt: opt = self.def_proj
+		elif len(opt.split('/')) < 1:
+			opt = "%s/%s" % (self.uname, opt)
+
+		if action.lower() in ['open', 'o', 'op']:
+			print 'attempting to reopen issue'
+			self.gh.issues.reopen(opt, id)
+		elif action.lower() in ['close', 'c', 'cl']:
+			self.gh.issues.close(opt, id)
+
+		return self.gh.issues.show(opt, id)

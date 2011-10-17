@@ -27,8 +27,17 @@ from optparse import OptionParser
 from gitwarrior import format_issue
 from ConfigParser import ConfigParser
 
-LIST_SHORTCUTS = ['list', 'li', 'ls']
-EDIT_SHORTCUTS = ['edit', 'ed', 'e']
+SHORTCUTS = {
+	'list':     ['list', 'li', 'ls'],
+	'edit':     ['edit', 'ed', 'e'],
+	'status':   ['status', 'st', 'stat']
+}
+
+DOCS = {
+	'list':     "List open issues, args: [ all | project name ]",
+	'edit':     "Edit the title or body of an issue. Opens the issue in default editor, or vi if it can't find a default editor",
+	'status':   "Check the status [ Open | Closed ] and alter it by giving a new status [ (open,op,o) | (closed, cl, c) ]"
+}
 
 def read_config(filename=None):
 	if not filename: filename = "%s/.gitwarriorrc" % os.getenv("HOME")
@@ -51,17 +60,26 @@ if __name__ == "__main__":
 
 	hub = Hub(config)
 
-	if args[0] in LIST_SHORTCUTS:
+	if args[0] in SHORTCUTS['list']:
 		#deal with list and all its shortcuts
 		try:
 			print format_issue(hub.list_issues(args[1]), tuple(options.headers.split(',')))
 		except IndexError:
-			print format_issue(hub.list_issues(config.get('Projects', 'default')), tuple(options.headers.split(',')))
+			print format_issue(hub.list_issues(config.get('Defaults', 'project')), tuple(options.headers.split(',')))
 
 	elif args[0] == 'la':
 		#deal with the shortcut of list that autolists all
 		print format_issue(hub.list_issues('all'), tuple(options.headers.split(',')))
 
-	elif args[0] in EDIT_SHORTCUTS:
-		hub.edit(args[1], options.project)
+	elif args[0] in SHORTCUTS['edit']:
+		print hub.edit(args[1], options.project)
+	
+	elif args[0] in SHORTCUTS['status']:
+		try:
+			print format_issue(hub.status(args[1], options.project, args[2]), tuple(options.headers.split(',')))
+		except IndexError:
+			print format_issue(hub.status(args[1], options.project), tuple(options.headers.split(',')))
+	elif args[0] in ['help', 'h']:
+		for c, d in DOCS.items():
+			print "  %s:\n\t\t%s" % (c, d)
 
