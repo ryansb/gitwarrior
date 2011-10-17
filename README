@@ -2,17 +2,15 @@ USAGE
 gw [ list | li | ls ]  [ all | Project ]
 		List all shortcut: la
 		List all open issues for a project, or for all projects
-gw show ID [ Project ]
+gw [ show | sho | sh ] ID [ Project ]
 		Show everything about a given issue
 gw new "This is a title" [ "This is the body" ] [ Project ]
 		Create an issue
-gw close ID [ Project ]
-		Close an open issue
-gw reopen ID [ Project ]
-		Reopen a closed issue
-gw edit ID "New title" "New body." [ Project ]
+gw [ status | stat | st ] ID [ close | open ]
+		Change status of an issue, without args it just shows the current status
+gw [ edit | ed | e ] ID "New title" "New body." [ Project ]
 		Replace an issue's title/body
-gw sync [ TaskWarrior database path ]
+gw [ sync | sy ] [ TaskWarrior database path ]
 		Sync local TaskWarrior tasks with Github issues
 gw set Section Var Val
 		Set a Var to Val in Section of your config. Will overwrite the current value

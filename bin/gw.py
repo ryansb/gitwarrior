@@ -30,13 +30,15 @@ from ConfigParser import ConfigParser
 SHORTCUTS = {
 	'list':     ['list', 'li', 'ls'],
 	'edit':     ['edit', 'ed', 'e'],
-	'status':   ['status', 'st', 'stat']
+	'status':   ['status', 'st', 'stat'],
+	'show':     ['show', 'sho', 'sh'],
 }
 
 DOCS = {
 	'list':     "List open issues, args: [ all | project name ]",
 	'edit':     "Edit the title or body of an issue. Opens the issue in default editor, or vi if it can't find a default editor",
-	'status':   "Check the status [ Open | Closed ] and alter it by giving a new status [ (open,op,o) | (closed, cl, c) ]"
+	'status':   "Check the status [ Open | Closed ] and alter it by giving a new status [ (open,op,o) | (closed, cl, c) ]",
+	'show':     "Show everything about a specific issue",
 }
 
 def read_config(filename=None):
@@ -79,6 +81,18 @@ if __name__ == "__main__":
 			print format_issue(hub.status(args[1], options.project, args[2]), tuple(options.headers.split(',')))
 		except IndexError:
 			print format_issue(hub.status(args[1], options.project), tuple(options.headers.split(',')))
+	elif args[0] in SHORTCUTS['show']:
+		issue = hub.get_issue(args[1], options.project)
+		fmt = "  %-15s%s"
+		print fmt % ('Title', issue.title)
+		print fmt % ('State', issue.state)
+		print fmt % ('User', issue.user)
+		print fmt % ('Opened at', str(issue.created_at))
+		if issue.state == 'closed': print fmt % ('Closed at', str(issue.closed_at))
+		if issue.votes > 0: print fmt % ('Votes', issue.votes)
+		if len(issue.labels) > 0: print fmt % ('Labels', ', '.join(issue.labels))
+		print fmt % ('Body', issue.body)
+
 	elif args[0] in ['help', 'h']:
 		for c, d in DOCS.items():
 			print "  %s:\n\t\t%s" % (c, d)

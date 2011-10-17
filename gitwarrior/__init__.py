@@ -58,6 +58,7 @@ def format_issue(issue, headers=('ID', 'State', 'Title', 'Body')):
 
 	for h in headers:
 		formatter_string += "%%-%ds" % HEADERS[h]['length']
+		print formatter_string
 	ret += formatter_string % headers
 	ret += '\n'
 	ret += "-" * len(formatter_string % headers)
