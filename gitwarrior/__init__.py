@@ -66,11 +66,11 @@ def format_issue(issue, headers=('ID', 'State', 'Title', 'Body')):
 	for i in issue:
 		ret_list = []
 		for h in headers:
-			t = unicode(HEADERS[h]['get'](i))
+			t = unicode(HEADERS[h]['get'](i)) + ''
 			if len(t) > HEADERS[h]['length']:
 				t = t[:HEADERS[h]['length']-3] + '...'
 			ret_list.append(t)
-		ret += formatter_string % tuple(ret_list)
+		ret += (formatter_string % tuple(ret_list)) + '\n'
 	return ret
 
 class Hub(object):
