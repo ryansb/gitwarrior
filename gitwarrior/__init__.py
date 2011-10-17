@@ -58,7 +58,6 @@ def format_issue(issue, headers=('ID', 'State', 'Title', 'Body')):
 
 	for h in headers:
 		formatter_string += "%%-%ds" % HEADERS[h]['length']
-		print formatter_string
 	ret += formatter_string % headers
 	ret += '\n'
 	ret += "-" * len(formatter_string % headers)
@@ -138,10 +137,17 @@ class Hub(object):
 		alterations = ConfigParser()
 		alterations.readfp(f)
 		f.close()
-		#self.gh.issues.edit(id, opt, alterations.get('Issue', 'Title'), alterations.get('Issue', 'Body'))
+		self.gh.issues.edit(id, opt, alterations.get('Issue', 'Title'), alterations.get('Issue', 'Body'))
 		return "Issue %s now has:\nTitle: %s\nBody: %s" % (id,
 				alterations.get('Issue', 'Title'), alterations.get('Issue',
 					'Body'))
+
+	def new(self, title, body, opt=None):
+		if not opt: opt = self.def_proj
+		elif len(opt.split('/')) < 1:
+			opt = "%s/%s" % (self.uname, opt)
+		i = self.gh.issues.open(opt, title, body)
+		return (i.number, opt)
 
 	def get_editor(self):
 		return (self.config.get('Defaults', 'editor') or os.environ.get('EDITOR')
@@ -152,10 +158,26 @@ class Hub(object):
 		elif len(opt.split('/')) < 1:
 			opt = "%s/%s" % (self.uname, opt)
 
+		if not action:
+			return self.gh.issues.show(opt, id)
 		if action.lower() in ['open', 'o', 'op']:
-			print 'attempting to reopen issue'
 			self.gh.issues.reopen(opt, id)
 		elif action.lower() in ['close', 'c', 'cl']:
 			self.gh.issues.close(opt, id)
 
 		return self.gh.issues.show(opt, id)
+
+	def add_comment(self, id, body, opt=None):
+		if not opt: opt = self.def_proj
+		elif len(opt.split('/')) < 1:
+			opt = "%s/%s" % (self.uname, opt)
+
+		self.gh.issues.comment(opt, id, body)
+		return "Added comment successfully"
+
+	def show_comments(self, id, opt=None):
+		if not opt: opt = self.def_proj
+		elif len(opt.split('/')) < 1:
+			opt = "%s/%s" % (self.uname, opt)
+
+		return self.gh.issues.comments(opt, id)

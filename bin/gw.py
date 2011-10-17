@@ -32,6 +32,8 @@ SHORTCUTS = {
 	'edit':     ['edit', 'ed', 'e'],
 	'status':   ['status', 'st', 'stat'],
 	'show':     ['show', 'sho', 'sh'],
+	'comment':  ['comment', 'com', 'co'],
+	'new':      ['new', 'n'],
 }
 
 DOCS = {
@@ -39,6 +41,8 @@ DOCS = {
 	'edit':     "Edit the title or body of an issue. Opens the issue in default editor, or vi if it can't find a default editor",
 	'status':   "Check the status [ Open | Closed ] and alter it by giving a new status [ (open,op,o) | (closed, cl, c) ]",
 	'show':     "Show everything about a specific issue",
+	'comment':  "Comment on an issue by sending the comment body as an argument, or view comments by passing [ show | sho | sh ] as an argument",
+	'new':      "Open a new issue, requires title and body of issue to create"
 }
 
 def read_config(filename=None):
@@ -84,6 +88,7 @@ if __name__ == "__main__":
 	elif args[0] in SHORTCUTS['show']:
 		issue = hub.get_issue(args[1], options.project)
 		fmt = "  %-15s%s"
+		print fmt % ('ID', issue.number)
 		print fmt % ('Title', issue.title)
 		print fmt % ('State', issue.state)
 		print fmt % ('User', issue.user)
@@ -92,6 +97,24 @@ if __name__ == "__main__":
 		if issue.votes > 0: print fmt % ('Votes', issue.votes)
 		if len(issue.labels) > 0: print fmt % ('Labels', ', '.join(issue.labels))
 		print fmt % ('Body', issue.body)
+	
+	elif args[0] in SHORTCUTS['comment']:
+		try:
+			if args[2] in SHORTCUTS['show']:
+				fmt = "%-18s%s"
+				print fmt % ("User", "Comment")
+				for c in hub.show_comments(args[1], options.project):
+					print fmt % (c.user, c.body)
+			else:
+				hub.add_comment(args[1], args[2], options.project)
+		except IndexError:
+			print "Error: Not enough arguments. Provide either comment to post or 'show' to view comments"
+
+	elif args[0] in SHORTCUTS['new']:
+		try:
+			print "Issue %s created in project %s" % hub.new(args[1], args[2], options.project)
+		except IndexError:
+			print "Error: Not enough arguments, please provide a title and a body"
 
 	elif args[0] in ['help', 'h']:
 		for c, d in DOCS.items():

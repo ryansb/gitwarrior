@@ -1,11 +1,13 @@
 USAGE
-gw [ list | li | ls ]  [ all | Project ]
+gw [ list | li | ls ]  [ all  ]
 		List all shortcut: la
 		List all open issues for a project, or for all projects
-gw [ show | sho | sh ] ID [ Project ]
+gw [ show | sho | sh ] ID
 		Show everything about a given issue
 gw new "This is a title" [ "This is the body" ] [ Project ]
 		Create an issue
+gw [ comment | co ] ID [ show | "Comment body" ]
+		Add a comment to the specified issue, or show all comments organized oldest -> newest
 gw [ status | stat | st ] ID [ close | open ]
 		Change status of an issue, without args it just shows the current status
 gw [ edit | ed | e ] ID "New title" "New body." [ Project ]
