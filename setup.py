@@ -35,7 +35,7 @@ setup(name = "gitwarrior",
 			'': ['*.yaml', 'conf/*.yaml']
 		},
 		scripts = [
-			'bin/gitwarrior.py',
+			'bin/gw.py',
 		],
 		license = 'NONE',
 		platforms = 'Posix; MacOS X (maybe?);',

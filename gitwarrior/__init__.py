@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding; utf-8 -*-
 # Author: Ryan Brown
-# Description: 
+# Description: Module that does all the work for the gw frontend command as
+# well as all the pushing to TaskWarrior
 #
 # Copyright (c) 2011 Ryan Brown ryansb@csh.rit.edu
 #
@@ -19,20 +20,28 @@
 # IN THE SOFTWARE.
 
 __version__ = "0.1"
-from github2.client import Github
+import os
+import tempfile
+from subprocess import PIPE
+from subprocess import Popen
 from operator import attrgetter
+from github2.client import Github
 
+ISSUE_FILE_CONTENT = """[Issue]
+Title = {title}
+Body  = {body}
+"""
 
 HEADERS = {
     'ID': {'get': attrgetter('number'), 'length':4},
     'State': {'get': attrgetter('state'), 'length':7},
     'Title': {'get': attrgetter('title'), 'length':32},
-    'Body': {'get': attrgetter('body'), 'length':32},
+    'Body': {'get': attrgetter('body'), 'length':50},
     'User': {'get': attrgetter('user'), 'length':15},
     'Votes': {'get': attrgetter('votes'), 'length':5},
 }
 
-def format_issue(issue, headers=('ID', 'State', 'Title')):
+def format_issue(issue, headers=('ID', 'State', 'Title', 'Body')):
 	"""Description: Returns a string of formatted output
 
 	Can pass in either a list of Issue objects or a single Issue
@@ -49,22 +58,29 @@ def format_issue(issue, headers=('ID', 'State', 'Title')):
 
 	for h in headers:
 		formatter_string += "%%-%ds" % HEADERS[h]['length']
-
 	ret += formatter_string % headers
 	ret += '\n'
 	ret += "-" * len(formatter_string % headers)
 	ret += '\n'
 
 	for i in issue:
-		ret += formatter_string % tuple(HEADERS[h]['get'](i) for h in headers)
+		print HEADERS[h]['length']
+		ret_list = []
+		for h in headers:
+			t = unicode(HEADERS[h]['get'](i))
+			if len(t) > HEADERS[h]['length']:
+				t = t[:HEADERS[h]['length']-3] + '...'
+			ret_list.append(t)
+		ret += formatter_string % tuple(ret_list)
 	return ret
 
 class Hub(object):
-	def __init__(self, uname, token, default_project):
-		self.uname = uname
-		self.token = token
+	def __init__(self, config):
+		self.uname = config.get('Credentials', 'username')
+		self.token = config.get('Credentials', 'token')
 		self._connect()
-		self.def_proj = "%s/%s" % (uname, default_project)
+		self.def_proj = "%s/%s" % (self.uname, config.get('Projects', 'default'))
+		self.config = config
 
 	@property
 	def gh(self):
@@ -103,3 +119,27 @@ class Hub(object):
 		if len(ilist) > 0:
 			return ilist
 		return None
+
+	def get_issue(self, id, opt=None):
+		if not opt: opt = self.def_proj
+		if len(opt.split('/')) < 1:
+			opt = "%s/%s" % (self.uname, opt)
+
+		return self.gh.issues.show(opt, id)
+
+	def edit(self, id, opt=None):
+		issue = self.get_issue(id, opt)
+		(fh, name) = tempfile.mkstemp(prefix='gw-edit-', suffix='.txt', text=True)
+		print type(fh), fh
+		print type(name), name
+		f = open(name, 'w')
+		f.write(ISSUE_FILE_CONTENT.format(title=issue.title, body=issue.body))
+		f.close()
+		Popen(args=[self.get_editor(), name], shell=True, bufsize=-1, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+		f = open(name, 'r')
+		edited_text = f.read()
+		f.close()
+		print edited_text
+
+	def get_editor(self):
+		return (self.config.get('ui', 'editor') or os.environ.get('EDITOR') or 'vi')
