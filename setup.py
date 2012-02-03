@@ -45,6 +45,6 @@ setup(name = "gitwarrior",
 			'Operating System :: OS Independent',
 			'Topic :: Internet',
 		],
-		dependency_links = ['https;//github.com/ask/python-github2' ],
+		dependency_links = ['https://github.com/ask/python-github2' ],
 		install_requires = [ ],
 	)
